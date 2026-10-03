@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "swagger-gherkin": {
+      "command": "python",
+      "args": ["-m", "swagger_gherkin_mcp.server"],
+      "env": {
+        "SWAGGER_GHERKIN_STEPS": "C:/path/to/your/step-templates.yaml"
+      },
+      "alwaysAllow": ["list_operations", "get_operation_details", "coverage_report", "get_step_vocabulary"],
+      "disabled": false
+    }
+  }
+}

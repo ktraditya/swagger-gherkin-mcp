@@ -1,0 +1,58 @@
+{
+  "swagger": "2.0",
+  "info": {"title": "Petstore", "version": "1.0.0"},
+  "basePath": "/v2",
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
+  "securityDefinitions": {"api_key": {"type": "apiKey", "name": "api_key", "in": "header"}},
+  "paths": {
+    "/pet": {
+      "post": {
+        "tags": ["pet"], "summary": "Add a new pet", "operationId": "addPet",
+        "parameters": [{"in": "body", "name": "body", "required": true, "schema": {"$ref": "#/definitions/Pet"}}],
+        "responses": {"200": {"description": "ok", "schema": {"$ref": "#/definitions/Pet"}}, "405": {"description": "Invalid input"}},
+        "security": [{"api_key": []}]
+      }
+    },
+    "/pet/findByStatus": {
+      "get": {
+        "tags": ["pet"], "summary": "Finds Pets by status", "operationId": "findPetsByStatus",
+        "parameters": [{"name": "status", "in": "query", "required": true, "type": "array",
+                        "items": {"type": "string", "enum": ["available", "pending", "sold"]}}],
+        "responses": {"200": {"description": "ok", "schema": {"type": "array", "items": {"$ref": "#/definitions/Pet"}}},
+                      "400": {"description": "Invalid status value"}}
+      }
+    },
+    "/pet/{petId}": {
+      "get": {
+        "tags": ["pet"], "summary": "Find pet by ID", "operationId": "getPetById",
+        "parameters": [{"name": "petId", "in": "path", "required": true, "type": "integer", "format": "int64", "minimum": 1}],
+        "responses": {"200": {"description": "ok", "schema": {"$ref": "#/definitions/Pet"}},
+                      "400": {"description": "Invalid ID"}, "404": {"description": "Pet not found"}},
+        "security": [{"api_key": []}]
+      },
+      "post": {
+        "tags": ["pet"], "operationId": "updatePetWithForm",
+        "consumes": ["application/x-www-form-urlencoded"],
+        "parameters": [
+          {"name": "petId", "in": "path", "required": true, "type": "integer"},
+          {"name": "name", "in": "formData", "required": true, "type": "string", "maxLength": 50},
+          {"name": "status", "in": "formData", "type": "string"}],
+        "responses": {"200": {"description": "ok"}, "405": {"description": "Invalid input"}}
+      }
+    }
+  },
+  "definitions": {
+    "Category": {"type": "object", "properties": {"id": {"type": "integer"}, "name": {"type": "string"}}},
+    "Pet": {
+      "type": "object", "required": ["name", "photoUrls"],
+      "properties": {
+        "id": {"type": "integer", "format": "int64"},
+        "category": {"$ref": "#/definitions/Category"},
+        "name": {"type": "string", "example": "doggie"},
+        "photoUrls": {"type": "array", "items": {"type": "string"}},
+        "status": {"type": "string", "enum": ["available", "pending", "sold"]}
+      }
+    }
+  }
+}

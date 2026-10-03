@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "swagger-gherkin-mcp"
+version = "0.1.0"
+description = "MCP server that generates Gherkin contract-test scenarios from Swagger 2.0 / OpenAPI 3.x specs"
+requires-python = ">=3.10"
+dependencies = ["mcp>=1.2", "pyyaml>=6"]
+
+[project.optional-dependencies]
+test = ["pytest>=8", "gherkin-official>=29"]
+
+[project.scripts]
+swagger-gherkin-mcp = "swagger_gherkin_mcp.server:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

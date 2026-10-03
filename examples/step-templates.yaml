@@ -1,0 +1,7 @@
+# Override any step wording so generated scenarios bind to YOUR existing step definitions.
+# Keys you leave out keep their defaults (see get_step_vocabulary).
+# Placeholders: {name} {value} {field} {length} {method} {path} {status} {schema} {scheme} {content_type}
+base_url: the "payments" service is available
+authenticated: I have a valid access token
+send: I call {method} "{path}"
+status: the HTTP status is {status}

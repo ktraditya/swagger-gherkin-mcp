@@ -1,0 +1,129 @@
+openapi: 3.0.3
+info:
+  title: Payments API
+  version: 1.2.0
+servers:
+  - url: https://api.example.com/v1
+security:
+  - bearerAuth: []
+tags:
+  - name: Payments
+  - name: Accounts
+paths:
+  /accounts/{accountId}:
+    get:
+      tags: [Accounts]
+      operationId: getAccount
+      summary: Get account details
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      responses:
+        '200':
+          description: Account found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Account' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Account not found }
+  /accounts/{accountId}/payments:
+    parameters:
+      - $ref: '#/components/parameters/AccountId'
+    get:
+      tags: [Payments]
+      operationId: listPayments
+      summary: List payments for an account
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [PENDING, EXECUTED, REJECTED] }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        '200':
+          description: Page of payments
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Payment' }
+        '400': { description: Invalid query }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [Payments]
+      operationId: createPayment
+      summary: Initiate a SEPA credit transfer
+      parameters:
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PaymentRequest' }
+      responses:
+        '201':
+          description: Payment created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Payment' }
+        '400': { description: Validation error }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Not allowed to debit this account }
+        '404': { description: Account not found }
+        '409': { description: Duplicate X-Request-ID }
+        '415': { description: Unsupported media type }
+  /health:
+    get:
+      tags: [Monitoring]
+      operationId: health
+      summary: Health check
+      security: []
+      responses:
+        '200': { description: OK }
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }
+  parameters:
+    AccountId:
+      name: accountId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  responses:
+    Unauthorized: { description: Missing or invalid token }
+  schemas:
+    Amount:
+      type: object
+      required: [value, currency]
+      properties:
+        value: { type: number, minimum: 0.01, maximum: 100000 }
+        currency: { type: string, enum: [EUR] }
+    PaymentRequest:
+      type: object
+      required: [creditorName, creditorIban, amount]
+      properties:
+        creditorName: { type: string, minLength: 1, maxLength: 70, example: Jan Peeters }
+        creditorIban: { type: string, pattern: '^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$', example: BE68539007547034 }
+        amount: { $ref: '#/components/schemas/Amount' }
+        remittanceInfo: { type: string, maxLength: 140 }
+        executionDate: { type: string, format: date }
+        instant: { type: boolean }
+    Payment:
+      allOf:
+        - $ref: '#/components/schemas/PaymentRequest'
+        - type: object
+          required: [id, status]
+          properties:
+            id: { type: string, format: uuid, readOnly: true }
+            status: { type: string, enum: [PENDING, EXECUTED, REJECTED] }
+    Account:
+      type: object
+      required: [id, iban, balance]
+      properties:
+        id: { type: string, format: uuid }
+        iban: { type: string }
+        balance: { $ref: '#/components/schemas/Amount' }
+        owner: { $ref: '#/components/schemas/Account' }   # deliberately circular
